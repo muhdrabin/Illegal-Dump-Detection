@@ -1,24 +1,3 @@
-"""
-YOLOv8 Trash Detection Model — Training Script
-Hardware : RTX 4060 Laptop (8GB VRAM) + i7-13650HX
-Optimised: amp=True, workers=6, batch=12 default for YOLOv8m
-
-Usage examples
---------------
-# Basic (single class 'trash', model m, your dataset folder):
-  python train_trash.py --dataset ./trash_dataset --model-size m
-
-# Full control:
-  yes 
-
-# Verify dataset only (no training):
-  python train_trash.py --dataset ./trash_dataset --verify-only
-
-# Validate a saved checkpoint:
-  python train_trash.py --dataset ./trash_dataset
-      --validate-only --model runs/trash_detection/trash_m_XXX/weights/best.pt
-"""
-
 import os
 import json
 import yaml
@@ -28,10 +7,6 @@ import torch
 from datetime import datetime
 import argparse 
 
-
-# ─────────────────────────────────────────────────────────────
-# SAFE DEFAULTS FOR RTX 4060 LAPTOP
-# ─────────────────────────────────────────────────────────────
 SAFE_BATCH = {
     'n': 32,
     's': 16,
@@ -202,10 +177,8 @@ class TrashModelTrainer:
 
         return metrics
 
-
-# ─────────────────────────────────────────────────────────────
 # DATASET HELPERS
-# ─────────────────────────────────────────────────────────────
+
 def create_dataset_yaml(dataset_root, class_names,
                         output_path='trash_dataset.yaml'):
     dataset_root = Path(dataset_root).absolute()
@@ -263,10 +236,8 @@ def verify_dataset(dataset_root):
     print("=" * 65 + "\n")
     return all_valid
 
-
-# ─────────────────────────────────────────────────────────────
 # MAIN
-# ─────────────────────────────────────────────────────────────
+
 def main():
     parser = argparse.ArgumentParser(
         description='Train YOLOv8 Trash Detection Model',
