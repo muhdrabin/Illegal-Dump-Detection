@@ -1,27 +1,3 @@
-"""
-person_vehicle_trash_tracker.py
-================================
-Dual-model tracker (person/vehicle via COCO + trash via custom model)
-with Kalman-stabilised trash IDs and full dump-event detection.
-
-Dump detection state machine (per trash track)
------------------------------------------------
-  NEW        -> trash appeared; watch for proximity to any actor
-  ASSOCIATED -> trash stayed near an actor for ASSOC_MIN_FRAMES frames
-  DUMPED     -> actor moved > DEPART_PX away AND trash velocity dropped
-               below STATIONARY_VEL for STATIONARY_FRAMES frames
-
-On dump confirmed
------------------
-  10-second annotated clip saved from the RAM ring buffer
-  Clean actor crop saved as JPEG evidence photo
-
-Startup baseline
-----------------
-  First BASELINE_FRAMES frames: every trash track seen is permanently
-  marked as pre-existing and never enters the state machine.
-"""
-
 import cv2
 import numpy as np
 from ultralytics import YOLO
@@ -33,10 +9,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional
 
-
-# =========================================================================
 # Tunable constants
-# =========================================================================
 
 PROXIMITY_PX      = 150
 ASSOC_MIN_FRAMES  = 8
@@ -49,11 +22,7 @@ POST_SECONDS      = 3
 TRASH_ID_OFFSET   = 10_000
 CROP_PAD          = 20
 
-
-# =========================================================================
 # Dump state machine
-# =========================================================================
-
 class DumpState(Enum):
     NEW        = auto()
     ASSOCIATED = auto()
@@ -78,10 +47,7 @@ class TrashDumpTrack:
     best_actor_frame:  Optional[np.ndarray] = None
     best_actor_conf:   float      = 0.0
 
-
-# =========================================================================
 # Kalman filter — one per trash track
-# =========================================================================
 
 class TrashKalmanTrack:
     _next_stable_id = 0
@@ -159,10 +125,7 @@ class TrashKalmanTrack:
         union = (ax2-ax1)*(ay2-ay1) + (bx2-bx1)*(by2-by1) - inter
         return inter / union if union > 0 else 0.0
 
-
-# =========================================================================
 # Kalman manager
-# =========================================================================
 
 class TrashKalmanManager:
     def __init__(self, max_missed: int = 10, iou_thresh: float = 0.08):
@@ -250,10 +213,7 @@ class TrashKalmanManager:
         self.tracks.clear()
         TrashKalmanTrack._next_stable_id = 0
 
-
-# =========================================================================
 # RAM ring buffer
-# =========================================================================
 
 class RingBuffer:
     def __init__(self, fps: int, seconds: int):
@@ -266,10 +226,7 @@ class RingBuffer:
     def snapshot(self) -> list:
         return list(self._buf)
 
-
-# =========================================================================
 # Main tracker + dump detector
-# =========================================================================
 
 class PersonVehicleTrashTracker:
     TARGET_COCO_IDS = [0, 1, 2, 3, 5, 7]
@@ -345,10 +302,8 @@ class PersonVehicleTrashTracker:
         self._post_meta:      dict = {}
         self._alert_frames:   int  = 0
 
-    # ------------------------------------------------------------------
     # Helpers
-    # ------------------------------------------------------------------
-
+  
     def _centre(self, bbox):
         x1, y1, x2, y2 = bbox
         return ((x1+x2)/2.0, (y1+y2)/2.0)
@@ -381,10 +336,7 @@ class PersonVehicleTrashTracker:
         self._alert_frames   = 0
         self.kalman_mgr.reset()
 
-    # ------------------------------------------------------------------
     # YOLO inference
-    # ------------------------------------------------------------------
-
     def _run_tracking(self, frame, update_trails=True):
         coco_res = self.coco_model.track(
             frame, persist=True, tracker=self.tracker_cfg,
@@ -455,10 +407,8 @@ class PersonVehicleTrashTracker:
                                'confidence':conf, 'track_id':tid})
         return tracks
 
-    # ------------------------------------------------------------------
     # Dump state machine
-    # ------------------------------------------------------------------
-
+  
     def _update_dump_state(self, tracks, raw_frame: np.ndarray):
         actor_tracks = [t for t in tracks
                         if t['label'] in ('person','vehicle')
@@ -558,11 +508,9 @@ class PersonVehicleTrashTracker:
             tr.best_actor_conf  = actor['confidence']
             tr.best_actor_bbox  = actor['bbox']
             tr.best_actor_frame = raw_frame.copy()
-
-    # ------------------------------------------------------------------
+          
     # Dump confirmed — save clip + crop
-    # ------------------------------------------------------------------
-
+   
     def _on_dump_confirmed(self, tr: TrashDumpTrack):
         self.confirmed_dumps += 1
         ts       = time.strftime('%Y%m%d_%H%M%S')
@@ -623,10 +571,8 @@ class PersonVehicleTrashTracker:
         cv2.imwrite(crop_path, crop)
         print(f"[dump] Crop saved : {crop_path}")
 
-    # ------------------------------------------------------------------
     # Drawing
-    # ------------------------------------------------------------------
-
+  
     def draw_tracks(self, image, tracks, draw_trails=True):
         out = image.copy()
         for t in tracks:
@@ -705,10 +651,8 @@ class PersonVehicleTrashTracker:
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,255), 1)
             y += th + bl + 8
 
-    # ------------------------------------------------------------------
     # Public run methods
-    # ------------------------------------------------------------------
-
+  
     def detect_video(self, video_path, output_path=None, display=True,
                      draw_trails=True):
         print(f"\n[run] Video: {video_path}")
@@ -912,11 +856,7 @@ class PersonVehicleTrashTracker:
         if self.confirmed_dumps:
             print(f" Evidence saved in     : {self.output_dir}/")
         print(f"{'='*55}")
-
-
-# =========================================================================
 # CLI
-# =========================================================================
 
 def main():
     parser = argparse.ArgumentParser(
