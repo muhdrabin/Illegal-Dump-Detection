@@ -1,23 +1,3 @@
-"""
-YOLOv8 Trash Detection Model — Testing & Evaluation Script
-
-Modes
------
-  image     : Run detection on a single image
-  folder    : Batch inference on all images in a folder
-  video     : Run detection on a video file
-  webcam    : Live detection from webcam
-  evaluate  : Full mAP / Precision / Recall / F1 on validation set
-
-Usage examples
---------------
-  python test_trash.py --model best.pt --mode image  --input photo.jpg
-  python test_trash.py --model best.pt --mode folder --input ./test_images/
-  python test_trash.py --model best.pt --mode video  --input clip.mp4 --output out.mp4
-  python test_trash.py --model best.pt --mode webcam
-  python test_trash.py --model best.pt --mode evaluate --data trash_dataset.yaml
-"""
-
 import cv2
 import json
 import time
@@ -27,16 +7,10 @@ from pathlib import Path
 from datetime import datetime
 from ultralytics import YOLO
 
-
-# ─────────────────────────────────────────────────────────────
-# SUPPORTED IMAGE EXTENSIONS
-# ─────────────────────────────────────────────────────────────
 IMG_EXTS = {'.jpg', '.jpeg', '.png', '.bmp', '.webp', '.tiff'}
 
-
-# ─────────────────────────────────────────────────────────────
 # DETECTOR CLASS
-# ─────────────────────────────────────────────────────────────
+
 class TrashDetector:
     """Inference and evaluation wrapper for a trained YOLOv8 trash model."""
 
@@ -424,10 +398,8 @@ class TrashDetector:
 
         return metrics
 
-
-# ─────────────────────────────────────────────────────────────
 # MAIN
-# ─────────────────────────────────────────────────────────────
+
 def main():
     parser = argparse.ArgumentParser(
         description='YOLOv8 Trash Detection — Test & Evaluate',
